@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Review Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-glow: rgba(99, 102, 241, 0.4);
+        --secondary: #a855f7;
+        --bg-dark: #0f172a;
+        --glass-bg: rgba(30, 41, 59, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    body {
+        background-color: var(--bg-dark);
+        /* Modern mesh gradient background */
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+        color: var(--text-main);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 460px;
+        background: var(--glass-bg);
+        padding: 2.5rem;
+        border-radius: 24px;
+        /* Glassmorphism blur and border */
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        box-shadow: 
+            0 20px 40px -10px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        transform: translateY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .container:hover {
+        transform: translateY(-5px);
+    }
+
+    h2 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 2rem;
+        text-align: center;
+        background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.02em;
+    }
+
+    .input-wrapper {
+        position: relative;
+        margin-bottom: 1.25rem;
+    }
+
+    input {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        color: white;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+    }
+
+    input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+
+    input:focus {
+        background: rgba(15, 23, 42, 0.9);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    }
+
+    button {
+        width: 100%;
+        padding: 1rem;
+        margin-top: 0.5rem;
+        background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px -3px var(--primary-glow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px var(--primary-glow);
+        filter: brightness(1.1);
+    }
+
+    button:active {
+        transform: translateY(0);
+    }
+
+    #result {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #e2e8f0;
+        min-height: 60px;
+        opacity: 0; /* Hidden initially */
+        display: none;
+        animation: fadeIn 0.5s forwards;
+    }
+
+    #result.visible {
+        display: block;
+        opacity: 1;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Subtle label for aesthetics */
+    .label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        margin-left: 0.25rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h2>Review Intelligence</h2>
+
+    <div class="input-wrapper">
+        <label class="label">Product Link</label>
+        <input id="url" placeholder="Paste Amazon Product URL..." autocomplete="off">
+    </div>
+
+    <div class="input-wrapper">
+        <label class="label">Your Query</label>
+        <input id="query" placeholder="e.g., Is the battery life good?" autocomplete="off">
+    </div>
+
+    <button onclick="analyze()">
+        Generate Insights
+    </button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+async function analyze() {
+    const url = document.getElementById("url").value;
+    const query = document.getElementById("query").value;
+    const resultBox = document.getElementById("result");
+    const btn = document.querySelector("button");
+
+    // UI Feedback: Loading state
+    btn.innerText = "Analyzing...";
+    btn.style.opacity = "0.7";
+    resultBox.className = ""; // Reset animation
+    
+    try {
+        const res = await fetch("http://127.0.0.1:5000/analyze", { 
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url, query })
+        });
+
+        const data = await res.json();
+        
+        // Add class to trigger CSS animation
+        resultBox.innerText = data.answer || data.error;
+        resultBox.classList.add("visible");
+
+    } catch (err) {
+        resultBox.innerText = "Failed to connect to the server. Make sure Python is running.";
+        resultBox.classList.add("visible");
+    } finally {
+        // UI Feedback: Reset button
+        btn.innerText = "Generate Insights";
+        btn.style.opacity = "1";
+    }
+}
+</script>
+</body>
+</html>
